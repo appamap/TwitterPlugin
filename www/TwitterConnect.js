@@ -1,4 +1,4 @@
-cordova.define("twitter-connect-plugin.TwitterConnect", function(require, exports, module) { var exec = require('cordova/exec');
+var exec = require('cordova/exec');
 
 var TwitterConnect = {
 	login: function (successCallback, errorCallback) {
@@ -9,12 +9,11 @@ var TwitterConnect = {
 	},
 	showUser: function (successCallback, errorCallback) {
 		exec(successCallback, errorCallback, 'TwitterConnect', 'showUser', []);
-    },
+	},
     accountVerify: function (successCallback, errorCallback) {
         exec(successCallback, errorCallback, 'TwitterConnect', 'accountVerify', []);
     }
+	
 };
 
 module.exports = TwitterConnect;
-
-});
