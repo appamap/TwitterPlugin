@@ -175,7 +175,7 @@ public class TwitterConnect extends CordovaPlugin {
         void showAccount(@Query("include_email") boolean id,@Query("include_entities") boolean entity,@Query("skip_status") boolean id, Callback<Response> cb);
     }
     
-    private void showUser(final CallbackContext callbackContext) {
+    private void accountVerify(final CallbackContext callbackContext) {
         cordova.getThreadPool().execute(new Runnable() {
             @Override
             public void run() {
