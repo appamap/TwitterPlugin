@@ -172,7 +172,7 @@ public class TwitterConnect extends CordovaPlugin {
     
     interface AccountService {
         @GET("/1.1/account/verify_credentials.json")
-        void showAccount(@Query("include_email") boolean id,@Query("include_entities") boolean entity,@Query("skip_status") boolean id, Callback<Response> cb);
+        void showAccount(@Query("include_email") boolean id,@Query("include_entities") boolean entity,@Query("skip_status") boolean skip, Callback<Response> cb);
     }
     
     private void accountVerify(final CallbackContext callbackContext) {
@@ -198,19 +198,6 @@ public class TwitterConnect extends CordovaPlugin {
                 });
             }
         });
-    }
-    
-    private JSONObject handleResult(TwitterSession result) {
-        JSONObject response = new JSONObject();
-        try {
-            response.put("userName", result.getUserName());
-            response.put("userId", result.getUserId());
-            response.put("secret", result.getAuthToken().secret);
-            response.put("token", result.getAuthToken().token);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return response;
     }
     
 	private void handleLoginResult(int requestCode, int resultCode, Intent intent) {
