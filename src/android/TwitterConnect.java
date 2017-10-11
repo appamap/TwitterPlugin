@@ -154,6 +154,65 @@ public class TwitterConnect extends CordovaPlugin {
 		return response;
 	}
 
+    
+    
+    /**
+     * Extends accountVerify adding our additional endpoints
+     * via the custom 'AccountService'
+     */
+    class AccountServiceApi extends TwitterApiClient {
+        public AccountServiceApi(TwitterSession session) {
+            super(session);
+        }
+        
+        public AccountService getCustomService() {
+            return getService(AccountService.class);
+        }
+    }
+    
+    interface AccountService {
+        @GET("/1.1/account/verify_credentials.json")
+        void showAccount(@Query("include_email") boolean id,@Query("include_entities") boolean entity,@Query("skip_status") boolean id, Callback<Response> cb);
+    }
+    
+    private void showUser(final CallbackContext callbackContext) {
+        cordova.getThreadPool().execute(new Runnable() {
+            @Override
+            public void run() {
+                AccountServiceApi twitterApiClient = new AccountServiceApi(Twitter.getSessionManager().getActiveSession());
+                AccountService accountService = twitterApiClient.getCustomService();
+                accountService.showAccount(true,false,true, new Callback<Response>() {
+                    @Override
+                    public void success(Result<Response> result) {
+                        try {
+                            callbackContext.success(new JSONObject(new String(((TypedByteArray) result.response.getBody()).getBytes())));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    @Override
+                    public void failure(TwitterException exception) {
+                        Log.v(LOG_TAG, "Twitter API Failed "+exception.getLocalizedMessage());
+                        callbackContext.error(exception.getLocalizedMessage());
+                    }
+                });
+            }
+        });
+    }
+    
+    private JSONObject handleResult(TwitterSession result) {
+        JSONObject response = new JSONObject();
+        try {
+            response.put("userName", result.getUserName());
+            response.put("userId", result.getUserId());
+            response.put("secret", result.getAuthToken().secret);
+            response.put("token", result.getAuthToken().token);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return response;
+    }
+    
 	private void handleLoginResult(int requestCode, int resultCode, Intent intent) {
 		TwitterLoginButton twitterLoginButton = new TwitterLoginButton(cordova.getActivity());
 		twitterLoginButton.onActivityResult(requestCode, resultCode, intent);
