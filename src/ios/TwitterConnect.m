@@ -2,7 +2,7 @@
 #import <Foundation/Foundation.h>
 #import "TwitterConnect.h"
 #import <Fabric/Fabric.h>
-#import <TwitterKit/TwitterKit.h>
+#import <TwitterKit/TWTRKit.h>
 
 @implementation TwitterConnect
 
@@ -11,10 +11,10 @@
     
     NSString* consumerKey = [self.commandDelegate.settings objectForKey:[@"TwitterConsumerKey" lowercaseString]];
     NSString* consumerSecret = [self.commandDelegate.settings objectForKey:[@"TwitterConsumerSecret" lowercaseString]];
-    [[Twitter sharedInstance] startWithConsumerKey:consumerKey consumerSecret:consumerSecret];
-    [Fabric with:@[[Twitter sharedInstance]]];
+    [[TWTRTwitter sharedInstance] startWithConsumerKey:consumerKey consumerSecret:consumerSecret];
+    [Fabric with:@[[TWTRTwitter sharedInstance]]];
     
-    [Fabric with:@[TwitterKit]];
+    //    [Fabric with:@[TwitterKit]];
 }
 
 
@@ -40,21 +40,26 @@
 
 - (void)logout:(CDVInvokedUrlCommand*)command
 {
-    [[Twitter sharedInstance] logOut];
+    TWTRSession *session = [TWTRTwitter sharedInstance].sessionStore.session;
+    [ [[TWTRTwitter sharedInstance] sessionStore] logOutUserID:(session.userID)];
     CDVPluginResult* pluginResult = pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
 - (void)showUser:(CDVInvokedUrlCommand*)command
 {
-    TWTRAPIClient *apiClient = [[Twitter sharedInstance] APIClient];
+    //    TWTRAPIClient *apiClient = [[TWTRTwitter sharedInstance] client];
+    //    TWTRAPIClient *apiClient = [[TWTRAPIClient self] APIClient];
+    TWTRAPIClient *apiClient = [[TWTRAPIClient alloc] init];
     
-    NSDictionary *requestParameters = [NSDictionary dictionaryWithObjectsAndKeys:[[[Twitter sharedInstance] session] userID], @"user_id", nil];
+    NSDictionary *requestParameters = [NSDictionary dictionaryWithObjectsAndKeys:[[[[TWTRTwitter sharedInstance] sessionStore] session] userID], @"user_id", nil];
     NSError *error = nil;
-    NSURLRequest *apiRequest = [apiClient URLRequestWithMethod:@"GET"
-                                                           URL:@"https://api.twitter.com/1.1/users/show.json"
-                                                    parameters:requestParameters
-                                                         error:&error];
+    //    NSURLRequest *apiRequest = [apiClient URLRequestWithMethod:@"GET"
+    //                                                           URL:@"https://api.twitter.com/1.1/users/show.json"
+    //                                                    parameters:requestParameters
+    //                                                         error:&error];
+    NSURLRequest *apiRequest = [apiClient URLRequestWithMethod:@"GET" URLString:@"https://api.twitter.com/1.1/users/show.json" parameters:requestParameters error:&error ];
+    
     [apiClient sendTwitterRequest:apiRequest
                        completion:^(NSURLResponse *response, NSData *data, NSError *error) {
                            NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
@@ -75,7 +80,9 @@
 
 - (void)accountVerify:(CDVInvokedUrlCommand*)command
 {
-    TWTRAPIClient *apiClient = [[Twitter sharedInstance] APIClient];
+    //    TWTRAPIClient *apiClient = [[Twitter sharedInstance] APIClient];
+    //    TWTRAPIClient *apiClient = [[TWTRAPIClient self] APIClient];
+    TWTRAPIClient *apiClient = [[TWTRAPIClient alloc] init];
     NSDictionary *requestParameters = [NSDictionary dictionaryWithObjectsAndKeys: @"true",@"include_email",@"false",@"include_entities",@"true",@"skip_status",nil];
     
     //    NSDictionary *requestParameters = [NSDictionary dictionaryWithObjectsAndKeys:[[[Twitter sharedInstance] session] userID], @"user_id", @"true",@"include_email",@"true",@"include_entities",@"true",@"skip_status",nil];
@@ -83,10 +90,11 @@
     //    [requestParameters setValue:@"true" forKey:@"include_email"];
     //    [requestParameters setValue:@"true" forKey:@"include_entities"];
     //    [requestParameters setValue:@"true" forKey:@"skip_status"];
-    NSURLRequest *apiRequest = [apiClient URLRequestWithMethod:@"GET"
-                                                           URL:@"https://api.twitter.com/1.1/account/verify_credentials.json"
-                                                    parameters:requestParameters
-                                                         error:&error];
+    //    NSURLRequest *apiRequest = [apiClient URLRequestWithMethod:@"GET"
+    //                                                           URL:@"https://api.twitter.com/1.1/account/verify_credentials.json"
+    //                                                    parameters:requestParameters
+    //                                                         error:&error];
+    NSURLRequest *apiRequest = [apiClient URLRequestWithMethod:@"GET" URLString:@"https://api.twitter.com/1.1/account/verify_credentials.json" parameters:requestParameters error:&error ];
     
     //    if ([[Twitter sharedInstance] session]) {
     //
@@ -104,14 +112,14 @@
     //    }
     
     NSString *urlString = [apiRequest.URL absoluteString];
-    NSLog(urlString);
+    //    NSLog(urlString);
     [apiClient sendTwitterRequest:apiRequest
                        completion:^(NSURLResponse *response, NSData *data, NSError *error) {
                            NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
                            NSInteger _httpStatus = [httpResponse statusCode];
                            NSString *myString = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
                            NSLog(@"**********************************************************");
-                           NSLog(myString);
+                           //                           NSLog(myString);
                            
                            CDVPluginResult *pluginResult = nil;
                            NSLog(@"API Response :%@",response);
@@ -124,6 +132,11 @@
                            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
                            
                        }];
+}
+
+
+- (BOOL)application:(UIApplication *)app openURL:(NSURL *)url options:(NSDictionary<NSString *,id> *)options {
+    return [[Twitter sharedInstance] application:app openURL:url options:options];
 }
 
 @end
